@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    We are using node <script>console.log("hi"); document.write(process.versions.node)</script>,
+    Chrome <script>document.write(process.versions.chrome)</script>,
+    and Electron <script>document.write(process.versions.electron)</script>.
+  </body>
+</html><html>
+
+  <head>
+
+    <title>Frameless Window</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="titlebar.js"></script>
+    <script src="frameless_window.js"></script>
+
+  </head>
+
+  <body>
+
+    <div id="content">
+
+      <div id="inner-content">
+
+        Select the titlebar to enable:<br/>
+        <input type="checkbox" id="top-box">Top Titlebar <br/>
+        <input type="checkbox" id="bottom-box">Bottom Titlebar <br/>
+        <input type="checkbox" id="left-box">Left Titlebar <br/>
+        <input type="checkbox" id="right-box">Right Titlebar <br/>
+        <br/>
+
+        <button id="close-window-button">Close Window</button>
+        <button id="minimize-window-button">Mnimize Window</button>
+        <button id="maximize-window-button">Maximize Window</button>
+        <button id="unmaximize-window-button">Restore Window</button>
+        <button id="toggle-window-button">Toggle FullScreen</button>
+        <button id="maxmin-window-button">Toggle Maximized</button> <br/>
+
+        <button id="min">_</button>
+        <button id="max">=</button>
+        <button id="exit">X</button>
+
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

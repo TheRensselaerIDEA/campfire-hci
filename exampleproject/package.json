@@ -1,0 +1,30 @@
+{
+  "name": "exampleproject",
+  "version": "1.0.1",
+  "main": "main.js",
+  "devDependencies": {
+    "electron-rebuild": "^1.7.3"
+  },
+  "dependencies": {
+    "@fangt/campfiremouseutil": "^1.0.3",
+    "electron": "^1.8.2",
+    "mouse": "0.0.1",
+    "robotjs": "^0.4.7",
+    "win-mouse": "^1.1.2"
+  },
+  "iohook": {
+    "targets": [
+      "node-51",
+      "electron-57"
+    ],
+    "platforms": [
+      "win32",
+      "darwin",
+      "linux"
+    ],
+    "arches": [
+      "x64",
+      "ia32"
+    ]
+  }
+}
