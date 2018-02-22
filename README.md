@@ -1,4 +1,4 @@
-# campfire-hci
+#campfire-hci
 Code related to HCI extensions for the IDEA Campfire
 #How to run
 1. cd ./../path/to/campfire-hci
@@ -17,3 +17,14 @@ npm rebuild --runtime=electron --target=1.8.2 --disturl=https://atom.io/download
 var screen = electron.screen;
 var mouseutil = require('@fangt/campfiremouseutil')(screen);
 ```
+
+#Additional dependencies:
+1. MSBuildTools
+	- http://landinghub.visualstudio.com/visual-cpp-build-tools
+2. Python 2.7
+	- set PYTHON path variable to C:/../path/to/Python27.exe
+	- OR npm install --global --production windows-build-tools
+3. Node-Gyp
+	- npm install --global node-gyp
+	- see building robotjs
+		- https://www.npmjs.com/package/robotjs

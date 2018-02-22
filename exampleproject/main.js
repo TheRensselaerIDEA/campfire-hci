@@ -26,8 +26,8 @@ var mouseController =
       this.floorScreen = null;
       var allScreens = screen.getAllDisplays();
       var main = screen.getPrimaryDisplay();
-      // TV["id"] = 2779098405
-      //main monitor id = 2528732444
+      //TV id = 2779098405
+      //main id = 2528732444
       if (allScreens[0].size.width > allScreens[1].size.width)
       {
         this.wallScreen = allScreens[0];
@@ -62,7 +62,6 @@ var mouseController =
     {
         var wall = this.wallScreen,
             floor = this.floorScreen;
-
         var mPos = robot.getMousePos();
         var lastX = mPos.x, lastY = mPos.y;
         //determines if the mouse cursor is within the boundaries of the floor, else we are on the wall.
@@ -70,7 +69,6 @@ var mouseController =
         var onFloor = function(x,y, floor)
         {
           var fb = floor.bounds;
-
           if ((x <= fb.x + fb.width && x >= fb.x) && 
              (y <= fb.y + fb.height && y >= fb.y))
           {
@@ -79,7 +77,6 @@ var mouseController =
           return false;
         }
         //Checks change between last position(lx, ly) current position(x,y)
-        //
         var getDir = function(x, y, lx, ly)
         {
           var hDir, vDir;
@@ -91,19 +88,14 @@ var mouseController =
           hDir = lx - x == 0 ?  hDir = "null" : hDir;
           return [hDir, vDir];
         }
-
-        
         //There is a mapping from f(f_x,f_y) -> w_x,w_y
         //where f(f_x,f_y) is a function applied to the coordinates of the floor screen
         //and the output is a corresponding point on the wall  screen.
-
         mouse.on('move', function(xPos, yPos) 
         {
           var dir = getDir(xPos, yPos, lastX, lastY)
-          lastX = xPos;
-          lastY = yPos;
-
           var isOnFloor = onFloor(xPos, yPos, floor);
+          lastX = xPos, lastY = yPos;
 
           //DEBUGGING!!!
           debug = "Mouse movement\n";
@@ -118,6 +110,7 @@ var mouseController =
           debug += "\n(LastX, LastY): " + "(" + lastX + "," + lastY + ")";
           debug += "\n(Mx, My): " + "(" + xPos + "," + yPos + ")";
           console.log(debug);
+          //DEBUGGING!!
 /*          if (xPos <= 1 && hDir == "left")
           {
             console.log("Condition met");
