@@ -1,4 +1,8 @@
 const electron = require('electron');
+const robot = require('robotjs');
+var mouse = require('win-mouse')();
+
+
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.
@@ -13,13 +17,81 @@ var floorWindow = null;
 var mainWindow = null;
 
 
+var mouseController = {
+    //Initialize screen variables with electron.
+    setScreens: function(screen)
+    {
+      this.wallScreen = null;
+      this.floorScreen = null;
+      var allScreens = screen.getAllDisplays();
+      var main = screen.getPrimaryDisplay();
+      //console.log(allScreens);
+     // console.log(main);
+      // TV["id"] = 2779098405
+      //main monitor id = 2528732444
+      if (allScreens[0].size.width > allScreens[1].size.width)
+      {
+        this.wallScreen = allScreens[0];
+        this.floorScreen = allScreens[1];
+      } 
+      else 
+      {
+          this.floorScreen = allScreens[0];
+          this.wallScreen = allScreens[1];
+        }
+    },
 
 
+    init: function(screen)
+    {
+      this.setScreens(screen);
+    
+
+      //There is a mapping from f(f_x,f_y) -> w_x,w_y
+      //where f(f_x,f_y) is a function applied to the coordinates of the floor screen
+      //and the output is a corresponding point on the wall screen.
+      wallSize = this.wallScreen.size;
+      w = wallSize.width/2;
+      h = wallSize.height/2;
+      twoPI = Math.PI * 2;
+      var x = 0, y = 0;
+      radius = 500;
+
+      //Moves mouse in a circle
+      for (var a = 0; a < twoPI; a+=0.1)
+      {
+        y = h + radius * Math.sin(a);
+        x = w + radius * Math.cos(a);
+        robot.moveMouse(x, y);
+        console.log("ROBOT MOVING:" + x + "," + y);
+      }
+
+      //Get direction of mouse
+      var lastX = 0, lastY = 0;
+      mouse.on('move', function(xPos, yPos) 
+      {
+        var hDir, vDir = "NULL";
+        //check dx (change in x) and dy (change in y) positions.
+        hDir = lastX < xPos ? "right" : "left";
+        vDir = lastY < yPos ? "down" : "up";
+
+        vDir = lastY - yPos == 0 ?  vDir = "null" : vDir;
+        hDir = lastX - xPos == 0 ?  hDir = "null" : hDir;
+		
+	       //	console.log(vDir + "," + hDir + "(" + lastX + "," + lastY + ")" + "(" + xPos + "," + yPos + ")");
+        //console.log(lastX +','+lastY)
+        lastX = xPos;
+        lastY = yPos;
+      }
+      );
+    }
+  }
 function createWindow () {
 
   var screenElectron = electron.screen;
+  mouseController.init(screenElectron);
   //Mouse support entry point
-  var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
+//  var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
 
   var mainScreen = screenElectron.getPrimaryDisplay();
   var allScreens = screenElectron.getAllDisplays();
@@ -44,7 +116,7 @@ function createWindow () {
 
   mainWindow = new BrowserWindow({x: 0, y: 0, 
                                   width: wallScreen.size.width, height: wallScreen.size.height, 
-                                  show: true,
+                                  show: false,
                                   webPreferences:{nodeIntegration: true}})
 
   // Now load the wall URL
@@ -56,7 +128,7 @@ function createWindow () {
   // "Floor" for debug should fill available screen
   floorWindow = new BrowserWindow({x:floorScreen.size.width, y:0, 
                                    width:floorScreen.size.width, height:floorScreen.size.height, 
-                                   show: true,
+                                   show: false,
                                    webPreferences:{nodeIntegration: true}})
 
   // Now load the floor URL
