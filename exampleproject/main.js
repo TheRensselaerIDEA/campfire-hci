@@ -73,6 +73,7 @@ var mouseController =
             floor = this.floorScreen;
         var mPos = robot.getMousePos();
         var lastX = mPos.x, lastY = mPos.y;
+
         //These functions are created in local scope to be used by the event listener.
         //Checks change between last position(lx, ly) current position(x,y)
         var getDir = function(x, y, lx, ly)
@@ -111,6 +112,7 @@ var mouseController =
         {
           var fb = floor.bounds, wb = wall.bounds;
           var isOnFloor = onFloor(xPos, yPos, fb);
+          var usingCampfire = false;
 
           var fCx = fb.x + (fb.width)/2,
               fCy = (fb.y + fb.height)/2,
@@ -124,20 +126,22 @@ var mouseController =
           var dx, dy, currentR;
 
           //Floor radius from center of floor
-          fRadius = Math.sqrt(fCx**2 + fCy**2) - 200;
+          fRadius = Math.sqrt(fCx**2 + fCy**2);
           //Wall radius from center of wall
-          wRadius = Math.sqrt(wCx**2 + wCy**2) - 200;
+          wRadius = Math.sqrt(wCx**2 + wCy**2);
           //current radius from center of current screen
           //Transitioning from floor to wall
-          console.log(isOnFloor);
+         // console.log(isOnFloor);
           if (isOnFloor)
           {
             dx = xPos - fCx, 
             dy = yPos - fCy;
             theta = calcTheta(dx, dy);
             currentR = Math.sqrt(dx**2 + dy**2); 
+            var offset = 959;
+            if (usingCampfire) offset = fRadius;
             //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
-            if (currentR > 959)
+            if (currentR > offset)
             {
               //experimental method, theta/360 outputs a number between 0,1 this portion can be used to determine
               // the value of x to be placed at on the wall screen.
