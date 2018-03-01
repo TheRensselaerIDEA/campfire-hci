@@ -16,7 +16,6 @@ var {app2, BrowserWindow2, ipcMain} = electron;
 var floorWindow = null;
 var mainWindow = null;
 
-
 var mouseController = 
 {
     //Initialize screen variables with electron.
@@ -28,16 +27,26 @@ var mouseController =
       var main = screen.getPrimaryDisplay();
       //TV id = 2779098405
       //main id = 2528732444
-      if (allScreens[0].size.width > allScreens[1].size.width)
+      console.log(allScreens);
+      if (allScreens.length > 1)
       {
-        this.wallScreen = allScreens[0];
-        this.floorScreen = allScreens[1];
-      } 
+        if (allScreens[0].size.width > allScreens[1].size.width)
+        {
+          this.wallScreen = allScreens[0];
+          this.floorScreen = allScreens[1];
+        } 
+        else 
+        {
+          this.floorScreen = allScreens[0];
+          this.wallScreen = allScreens[2];
+        }
+      }
       else 
       {
-        this.floorScreen = allScreens[0];
-        this.wallScreen = allScreens[1];
+        this.wallScreen = main;
+        this.floorScreen = main;
       }
+
     },
 
     rotateMouse: function()
@@ -64,18 +73,7 @@ var mouseController =
             floor = this.floorScreen;
         var mPos = robot.getMousePos();
         var lastX = mPos.x, lastY = mPos.y;
-        //determines if the mouse cursor is within the boundaries of the floor, else we are on the wall.
         //These functions are created in local scope to be used by the event listener.
-        var onFloor = function(x,y, floor)
-        {
-          var fb = floor.bounds;
-          if ((x <= fb.x + fb.width && x >= fb.x) && 
-             (y <= fb.y + fb.height && y >= fb.y))
-          {
-            return true;
-          }
-          return false;
-        }
         //Checks change between last position(lx, ly) current position(x,y)
         var getDir = function(x, y, lx, ly)
         {
@@ -88,35 +86,103 @@ var mouseController =
           hDir = lx - x == 0 ?  hDir = "null" : hDir;
           return [hDir, vDir];
         }
+          //determines if the mouse cursor is within the boundaries of the floor, else we are on the wall.
+        
+        var onFloor = function(x,y, fb)
+        {
+          if ((x <= fb.x + fb.width && x >= fb.x) && 
+             (y <= fb.y + fb.height && y >= fb.y))
+          {
+            return true;
+          }
+          return false;
+        }
+        var calcTheta = function(dx, dy)
+        {
+          var t = Math.atan2(dy,dx) * 180 / Math.PI;
+          if (t < 0) t = 360 + t;
+          return t
+        }
+
         //There is a mapping from f(f_x,f_y) -> w_x,w_y
         //where f(f_x,f_y) is a function applied to the coordinates of the floor screen
         //and the output is a corresponding point on the wall  screen.
         mouse.on('move', function(xPos, yPos) 
         {
-          var dir = getDir(xPos, yPos, lastX, lastY)
-          var isOnFloor = onFloor(xPos, yPos, floor);
-          lastX = xPos, lastY = yPos;
+          var fb = floor.bounds, wb = wall.bounds;
+          var isOnFloor = onFloor(xPos, yPos, fb);
 
-          //DEBUGGING!!!
-          debug = "Mouse movement\n";
-          for (var i = 0; i < dir.length; i++)
+          var fCx = fb.x + (fb.width)/2,
+              fCy = (fb.y + fb.height)/2,
+              wCx = wb.x + (wb.width)/2, 
+              wCy = (wb.y + wb.height)/2;
+              lastX = xPos, lastY = yPos;
+
+          var theta, radius,
+              lastX = xPos, 
+              lastY = yPos;
+          var dx, dy, currentR;
+
+          //Floor radius from center of floor
+          fRadius = Math.sqrt(fCx**2 + fCy**2) - 200;
+          //Wall radius from center of wall
+          wRadius = Math.sqrt(wCx**2 + wCy**2) - 200;
+          //current radius from center of current screen
+          //Transitioning from floor to wall
+          console.log(isOnFloor);
+          if (isOnFloor)
           {
-            if (dir[i] != "null")
+            dx = xPos - fCx, 
+            dy = yPos - fCy;
+            theta = calcTheta(dx, dy);
+            currentR = Math.sqrt(dx**2 + dy**2); 
+            //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
+            if (currentR > 959)
             {
-              debug += dir[i] + " "
+              //experimental method, theta/360 outputs a number between 0,1 this portion can be used to determine
+              // the value of x to be placed at on the wall screen.
+              // I believe the y value is irrelevant because the mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
+              var frac = theta/360;
+              var x = wb.x + (wb.width * frac);
+              var y = wb.height-1;  
+                  //discussed method of computing x,y pos on wall to move to
+                 // x = wCx + wRadius * Math.cos(theta),
+                 // y = wCy + wRadius * Math.sin(theta);
+                  
+              robot.moveMouse(x, y);
+              console.log("\nFloor: Moved from " + xPos, yPos);
+              console.log("Floor: Moved to " + x + "," + y);
             }
           }
-          debug += "\nOnFloor = " + isOnFloor
-          debug += "\n(LastX, LastY): " + "(" + lastX + "," + lastY + ")";
-          debug += "\n(Mx, My): " + "(" + xPos + "," + yPos + ")";
-          console.log(debug);
-          //DEBUGGING!!
-/*          if (xPos <= 1 && hDir == "left")
+          //Logic for transitioning from wall to floor
+          else if(!isOnFloor)
           {
-            console.log("Condition met");
-            robot.moveMouse(wall.bounds.x, wall.bounds.y);
+            dx = xPos - wCx,
+            dy = yPos - wCy;
+            currentR =  Math.sqrt(dx**2 + dy**2);
+            theta = calcTheta(dx, dy);
+            if (theta >= 0 && theta <= 180 && yPos > wb.height-1)
+            {
+              //place holder values for radius, until tested on campfire.
+              var x = fCx + (fRadius-100) * Math.cos(2*theta);
+              var y = fCy + (520) * Math.sin(2*theta);
+              robot.moveMouse(x, y);
+              console.log("\nWall: Moved from " + xPos, yPos);
+              console.log("Wall: Moved to " + x + "," + y);
+            }
           }
-*/
+          //DEBUGGING!!!
+          debug = "";
+          debug += "\nOnFloor = " + isOnFloor
+          //debug += "\n(LastX, LastY): " + "(" + lastX + "," + lastY + ")";
+          debug += "\n Current R - " + currentR;
+          debug += "\n(Mx, My): " + "(" + xPos + "," + yPos + ")";
+          debug += "\nWall Center: " + wCx + "," + (wCy);
+          debug += "\nFloor Center" + fCx + "," + fCy;
+          debug += "\n(Theta): " + "(" + theta + ")";
+         // debug += "\n" + fCx + "," + fCy;
+          //console.log(debug);
+          //DEBUGGING!!
         }
         );
     },
