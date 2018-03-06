@@ -4,3 +4,4 @@ npm rebuild --runtime=electron --target=1.8.2 --disturl=https://atom.io/download
 install python/buildtools
 npm install --global --production windows-build-tools
 npm install --global node-gyp
+

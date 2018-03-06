@@ -112,6 +112,7 @@ var mouseController =
         {
           var fb = floor.bounds, wb = wall.bounds;
           var isOnFloor = onFloor(xPos, yPos, fb);
+        //  console.log(isOnFloor);
           var usingCampfire = false;
 
           var fCx = fb.x + (fb.width)/2,
@@ -148,14 +149,14 @@ var mouseController =
               // I believe the y value is irrelevant because the mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
               var frac = theta/360;
               var x = wb.x + (wb.width * frac);
-              var y = wb.height-1;  
+              var y = wb.height-10;  
                   //discussed method of computing x,y pos on wall to move to
                  // x = wCx + wRadius * Math.cos(theta),
                  // y = wCy + wRadius * Math.sin(theta);
                   
-              robot.moveMouse(x, y);
-              console.log("\nFloor: Moved from " + xPos, yPos);
-              console.log("Floor: Moved to " + x + "," + y);
+              //robot.moveMouse(x, y);
+              //console.log("\nFloor: Moved from " + xPos, yPos);
+              //console.log("Floor: Moved to " + x + "," + y);
             }
           }
           //Logic for transitioning from wall to floor
@@ -164,12 +165,19 @@ var mouseController =
             dx = xPos - wCx,
             dy = yPos - wCy;
             currentR =  Math.sqrt(dx**2 + dy**2);
-            theta = calcTheta(dx, dy);
-            if (theta >= 0 && theta <= 180 && yPos > wb.height-1)
+            var perc = (xPos-wb.x) / (wb.width);
+            //convert to radians
+            theta = (perc * 2) * Math.PI; 
+            if (xPos >= wb.x && yPos > wb.height-1)
             {
               //place holder values for radius, until tested on campfire.
-              var x = fCx + (fRadius-100) * Math.cos(2*theta);
-              var y = fCy + (520) * Math.sin(2*theta);
+
+              if (theta > 360) theta = 360;
+              console.log("Theta = " + theta);
+              var x = fCx + (fRadius-200) * (Math.cos(theta));
+              var y = fCy + (1) * Math.sin(theta);
+              console.log("r * cos(theta) = " + fRadius + "*"+(Math.cos(theta)))
+              console.log("r * sin(theta) = " + ((1) +"*"+ Math.sin(theta)))
               robot.moveMouse(x, y);
               console.log("\nWall: Moved from " + xPos, yPos);
               console.log("Wall: Moved to " + x + "," + y);
@@ -200,10 +208,9 @@ var mouseController =
 function createWindow () {
 
   var screenElectron = electron.screen;
-  mouseController.init(screenElectron);
   //Mouse support entry point
-//  var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
-
+  //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
+  mouseController.init(screenElectron);
   var mainScreen = screenElectron.getPrimaryDisplay();
   var allScreens = screenElectron.getAllDisplays();
   var wallScreen = null;
@@ -218,36 +225,37 @@ function createWindow () {
     wallScreen = allScreens[1];
   }
 
-/*  console.log("Main screen",mainScreen);
+  console.log("Main screen",mainScreen);
   console.log("all screens", allScreens)
-*/
+
   // Create a browser window for the "Wall"...
   // "Wall" should fill available screen
 
 
   mainWindow = new BrowserWindow({x: 0, y: 0, 
                                   width: wallScreen.size.width, height: wallScreen.size.height, 
-                                  show: false,
+                                  show: true,
                                   webPreferences:{nodeIntegration: true}})
 
   // Now load the wall URL
-  mainWindow.loadURL('https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Wall');
-
+  mainWindow.loadURL('file:C:/Users/dkfan/Documents/campfire-hci/exampleproject/wall.html');
+  //console.log(wallScreen.size);
+  //console.log(mainWindow.getSize());
   // Create a browser window for the "Floor"...
   // Floor on Campfire must be centered (x position)
   //floorWindow = new BrowserWindow({ frame:false, x:((1920-1080)/2)-1920, y:0, width:1080, height:800}, webPreferences:{nodeIntegration: false} )
   // "Floor" for debug should fill available screen
   floorWindow = new BrowserWindow({x:floorScreen.size.width, y:0, 
                                    width:floorScreen.size.width, height:floorScreen.size.height, 
-                                   show: false,
+                                   show: true,
                                    webPreferences:{nodeIntegration: true}})
 
   // Now load the floor URL
   //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
-  floorWindow.loadURL('https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor')
+  floorWindow.loadURL('file:C:/Users/dkfan/Documents/campfire-hci/exampleproject/floor.html')
 
- floorWindow.setFullScreen(false);
-  mainWindow.setFullScreen(false);
+ floorWindow.setFullScreen(true);
+  mainWindow.setFullScreen(true);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {

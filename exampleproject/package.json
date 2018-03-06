@@ -8,6 +8,7 @@
   "dependencies": {
     "@fangt/campfiremouseutil": "^1.0.3",
     "electron": "^1.8.2",
+    "keypress": "^0.2.1",
     "mouse": "0.0.1",
     "robotjs": "^0.4.7",
     "win-mouse": "^1.1.2"
