@@ -160,17 +160,18 @@ var mouseController =
               //console.log("\nFloor: Moved to " + x + "," + y);
             }
         }
+          var fCx = fb.x + (fb.width)/2,
+              fCy = fb.y + (fb.height)/2,
+              wCx = wb.x + (wb.width)/2, 
+              wCy = (wb.y + wb.height)/2;
+
         //There is a mapping from f(f_x,f_y) -> w_x,w_y
         //where f(f_x,f_y) is a function applied to the coordinates of the floor screen
         //and the output is a corresponding point on the wall  screen.
         mouse.on('move', function(xPos, yPos)
         {
-          var isOnFloor = onFloor(xPos, yPos, fb);
-          var fCx = fb.x + (fb.width)/2,
-              fCy = fb.y + (fb.height)/2,
-              wCx = wb.x + (wb.width)/2, 
-              wCy = (wb.y + wb.height)/2;
           var lastX = xPos, lastY = yPos;
+          var isOnFloor = onFloor(xPos, yPos, fb);
           //Floor radius from center of floor
           fRadius = 540;
           //Wall radius from center of wall
@@ -202,8 +203,21 @@ var mouseController =
     init: function(screen)
     {
       this.screens = this.setScreens(screen);
-      this.listen();
+      this.listen(/*add parameters*/);
       //this.rotateMouse();
+    },
+    setMode: function(args)
+    {
+      mouse.destroy();
+      mouse = require('win-mouse')()
+      if (args.length > 0)
+      {
+        for (var i = 0; i < args.length; i++){
+           console.log(args[i]);
+        }
+      }
+      this.listen();
+
     }
 }
 function createWindow () {
