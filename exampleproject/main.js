@@ -31,12 +31,12 @@ var mouseController =
         if (allScreens[0].size.width > allScreens[1].size.width)
         {
           this.wallScreen = allScreens[0];
-          this.floorScreen = allScreens[2];
+          this.floorScreen = allScreens[1];
         }
         else
         {
           this.floorScreen = allScreens[0];
-          this.wallScreen = allScreens[2];
+          this.wallScreen = allScreens[1];
         }
       }
       else
@@ -53,7 +53,7 @@ var mouseController =
       var h = (this.floorSize.height/2);
       var twoPI = Math.PI * 2;
       var x = 0, y = 0;
-      var radius = 539;
+      var radius = (this.floorSize.height/2)-1;
 
       //Moves mouse in a circle
       for (var a = 0; a < twoPI; a+=0.1)
@@ -171,9 +171,9 @@ var mouseController =
         mouse.on('move', function(xPos, yPos)
         {
           var lastX = xPos, lastY = yPos;
-          var isOnFloor = onFloor(xPos, yPos, fb);
+          var isOnFloor = onFloor(xPos, yPos, fb),
           //Floor radius from center of floor
-          fRadius = 540;
+          fRadius = 539;
           //Wall radius from center of wall
           //current radius from center of current screen
           //Transitioning from floor to wall
@@ -234,10 +234,10 @@ function createWindow () {
   // Wider screen should be the "Wall"
   if (allScreens[0].size.width > allScreens[1].size.width){
     wallScreen = allScreens[0];
-    floorScreen = allScreens[2];
+    floorScreen = allScreens[1];
   } else {
     floorScreen = allScreens[0];
-    wallScreen = allScreens[2];
+    wallScreen = allScreens[1];
   }
 
   console.log("Main screen",mainScreen);
@@ -251,7 +251,7 @@ function createWindow () {
                                   width: wallScreen.size.width, height: wallScreen.size.height,
                                   show: true,
                                   frame: false,
-                                  webPreferences:{nodeIntegration: true}})
+                                  webPreferences:{nodeIntegration: true, zoomFactor: 0.3}})
   // Now load the wall URL
   mainWindow.loadURL('file://' + __dirname + '/walltest.html');
   //console.log(wallScreen.size);
@@ -264,12 +264,13 @@ function createWindow () {
                                    width:floorScreen.size.width, height:floorScreen.size.height,
                                    show: true,
                                    frame: false,
-                                   webPreferences:{nodeIntegration: true}})
-floorWindow.setContentSize(1920,1080);
+                                   webPreferences:{nodeIntegration: true, zoomFactor: 0.83}})
+ 
+ floorWindow.setContentSize(1920,1080);
   // Now load the floor URL
   //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
   floorWindow.loadURL('file://' + __dirname + '/floortest.html')
- floorWindow.setFullScreen(false);
+  floorWindow.setFullScreen(false);
   mainWindow.setFullScreen(false);
 
   // Emitted when the window is closed.
