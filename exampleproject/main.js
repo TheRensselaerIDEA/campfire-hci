@@ -1,3 +1,18 @@
+/*
+  Author: Tommy Fang
+  Date: 3/20/2018
+  Advisors: Professors Jim Hendler and John Erickson
+  Rensselaer Polytechnic Institute Master's Project Spring 2018
+  
+  
+  Please see attached slides for references on figures which are crucial
+  in explaining the logic behind this architecture.
+  
+
+
+
+
+*/
 const electron = require('electron');
 const robot = require('robotjs');
 var mouse = require('win-mouse')();
@@ -23,28 +38,23 @@ var mouseController =
     {
       this.wallScreen = null;
       this.floorScreen = null;
+
+      this.floorOffset = 0.75, 
+      this.wallOffset = 0.25; 
+
       var allScreens = screen.getAllDisplays();
       var main = screen.getPrimaryDisplay();
       //console.log(allScreens);
-      if (allScreens.length > 1)
-      {
         if (allScreens[0].size.width > allScreens[1].size.width)
         {
           this.wallScreen = allScreens[0];
-          this.floorScreen = allScreens[1];
+          this.floorScreen = allScreens[2];
         }
         else
         {
           this.floorScreen = allScreens[0];
-          this.wallScreen = allScreens[1];
+          this.wallScreen = allScreens[2];
         }
-      }
-      else
-      {
-        this.wallScreen = main;
-        this.floorScreen = main;
-      }
-
     },
     rotateMouse: function()
     {
@@ -72,7 +82,7 @@ var mouseController =
         var mPos = robot.getMousePos();
         var lastX = mPos.x, lastY = mPos.y;
         var usingCampfire = true;
-        var borderOffset = 10;
+        var borderOffset = 30;
         var onFloor = false;
         //These functions are created in local scope to be used by the event listener.
         //Checks change between last position(lx, ly) current position(x,y)
@@ -88,37 +98,40 @@ var mouseController =
           return [hDir, vDir];
         }
           //determines if the mouse cursor is within the boundaries of the floor, else we are on the wall.
-
         var onFloor = function(x,y)
         {
-          if ((x <= fb.x + fb.width && x >= fb.x) &&
-             (y <= fb.y + fb.height && y >= fb.y))
-          {
-            return true;
-          }
-          return false;
+          return ((x <= fb.x + fb.width && x >= fb.x) &&
+             (y <= fb.y + fb.height && y >= fb.y));
         }
+        //Input: dx: distance between centerx and mousex
+        //       dy: distance between centery and mousey
+
+        //Output: 
         var calcTheta = function(dx, dy)
         {
+          //degree of angle
           var t = Math.atan2(dy,dx) * 180 / Math.PI;
           if (t < 0) t = 360 + t;
           return t
         }
-        var wallListener = function(xPos, yPos, fCx, fCy, fRadius, borderOffset)
+        var wallListener = function(xPos, yPos, fCx, fCy, fRadius, userOffset, borderOffset)
         {
             //Get position of mouse and convert to percentage of x position to width on wall screen.
             var perc = (xPos - wb.x) / wb.width,
             twoPI = Math.PI * 2,
-            //convert to radians
-            //Theta's range = [0, 2*Pi]
-            angleOffset = Math.PI/2;
-
-            theta = perc * (twoPI) + angleOffset;
+            //convert to radians, degrees dont return correct values using Math.sin, cos
+            //Theta's range = [0, 2pi]
+            wallOffset = twoPI * userOffset;
+            //Math.PI/2; <-- good for cfire
+            //2pi * pi/2 = pi
+            theta = (perc * twoPI) + wallOffset;
+            //Clamp theta to [0, 2pi]
             if (theta > twoPI)
             {
               theta = Math.abs(theta - Math.PI * 2);
             }
             //case for reaching vertical border, the mouse should appear on the opposite border.
+            //moving right to left
             if (xPos >= wb.x + wb.width)
             {
               robot.moveMouse(wb.x, yPos);
@@ -127,68 +140,71 @@ var mouseController =
             {
               robot.moveMouse(wb.x+wb.width-1, yPos);
             }*/
-            if (xPos > wb.x && yPos > wb.height-2)
+            if (xPos > wb.x && yPos > wb.height-1)
             {
-              //place holder values for radius, until tested on campfire.
-           //   if (theta > 360) theta = 360;
               var newRadius = fRadius - borderOffset;
               var x = fCx + (newRadius * Math.cos(theta));
               var y = fCy + (newRadius * Math.sin(theta));
               robot.moveMouse(x, y);
-              console.log("\nWall: Moved from " + xPos, yPos);
-              console.log("Wall: Moved to " + x + "," + y);
             }
         }
-        var floorListener = function(xPos, yPos, fCx, fCy, borderOffset)
+        var floorListener = function(xPos, yPos, fCx, fCy, fRadius, userOffset, borderOffset)
         {
             var dx = xPos - fCx,
                 dy = yPos - fCy,
                 theta = calcTheta(dx, dy),
-                currentR = Math.sqrt(dx**2 + dy**2),
-                offset = 539;
+                currentR = Math.sqrt(dx**2 + dy**2);
+
             //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
-            if (currentR > offset)
+            if (currentR > fRadius)
             {
-              //experimental method, theta/360 outputs a number between 0,1 this portion can be used to determine
-              // the value of x to be placed at on the wall screen.
-              // I believe the y value is irrelevant because the mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
-              var frac = theta/360;
-              var x = 4800 + (wb.x + (wb.width * frac));
-              if (x > 6400)
+              /* theta/360 outputs a number between 0,1 this fraction of the total wall screen width 
+                determines x value to place on wall screen.
+                The y value is easily determined because the 
+                mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
+              */ 
+              var frac = theta/360,
+              floorOffset = (wb.x + wb.width) * (userOffset);
+
+              // the fraction of width from the origin: (wb.x + (wb.width * frac))
+              //wallOffset is typically 4800 = (3/4) * 6400 if the origin is at 0 degrees
+              var x = floorOffset + (wb.x + (wb.width * frac));
+              if (x > wb.x + wb.width)
               {
-                x = x - 6400;
+                x -= wb.x + wb.width;
               }
               var y = wb.height - borderOffset;
               robot.moveMouse(x, y);
-             // console.log("\nFloor: Moved from " + xPos, yPos);
-              //console.log("\nFloor: Moved to " + x + "," + y);
             }
         }
+              //Center of screen is (origin + length) / 2
           var fCx = fb.x + (fb.width)/2,
               fCy = fb.y + (fb.height)/2,
               wCx = wb.x + (wb.width)/2,
-              wCy = (wb.y + wb.height)/2;
-
-        //There is a mapping from f(f_x,f_y) -> w_x,w_y
-        //where f(f_x,f_y) is a function applied to the coordinates of the floor screen
-        //and the output is a corresponding point on the wall  screen.
-        mouse.on('move', function(xPos, yPos)
+              wCy = (wb.y + wb.height)/2,
+              //Radius of floor circle, used to determine threshold for transitioning to wall.
+              fRadius = (fb.height/2)-1,
+              //These two offsets determine an origin angle for both screens.
+              //Due to the way the wall screen is oriented on top of the floor screen, these variables are required.
+              floorOffset = 0.75, 
+              wallOffset = 0.25; 
+        // Event Listener: Receives x and y positions of the mouse
+        mouse.on('move', function(mouseX, mouseY)
         {
-          var lastX = xPos, lastY = yPos;
-          var isOnFloor = onFloor(xPos, yPos, fb),
+          var lastX = mouseX, lastY = mouseY;
+          var isOnFloor = onFloor(mouseX, mouseY, fb);
           //Floor radius from center of floor
-          fRadius = 539;
           //Wall radius from center of wall
           //current radius from center of current screen
           //Transitioning from floor to wall
           if (isOnFloor)
           {
-            floorListener(xPos, yPos, fCx, fCy, borderOffset);
+            floorListener(mouseX, mouseY, fCx, fCy, fRadius, floorOffset, borderOffset);
           }
           //Logic for transitioning from wall to floor
           else if(!isOnFloor)
           {
-            wallListener(xPos, yPos, fCx, fCy, fRadius, borderOffset);
+            wallListener(mouseX, mouseY, fCx, fCy, fRadius, wallOffset, borderOffset);
           }
           //DEBUGGING!!!
           debug = "";
@@ -216,8 +232,24 @@ var mouseController =
       mouse = require('win-mouse')()
       if (args.length > 0)
       {
+        var param;
         for (var i = 0; i < args.length; i++){
            console.log(args[i]);
+           param = args[i];
+           if (param.hasOwnProperty("floorOffset"))
+           {
+              this.floorOffset = param["floorOffset"];
+           }
+           // param = {"wallOffset": float from (0.0, 1.0) or degrees/360, radians/2pi}
+            if (param.hasOwnProperty("wallOffset"))
+           {
+              this.wallOffset = param["wallOffset"];
+           }
+           // param = {"trayMode": True or False}
+            if (param.hasOwnProperty("trayMode"))
+           {
+              this.trayMode = param["trayMode"];
+           }
         }
       }
       this.listen();
@@ -228,8 +260,8 @@ function createWindow () {
 
   var screenElectron = electron.screen;
   //Mouse support entry point
-  //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
-  mouseController.init(screenElectron);
+  var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
+  //mouseController.init(screenElectron);
   var mainScreen = screenElectron.getPrimaryDisplay();
   var allScreens = screenElectron.getAllDisplays();
   var wallScreen = null;
@@ -238,10 +270,10 @@ function createWindow () {
   // Wider screen should be the "Wall"
   if (allScreens[0].size.width > allScreens[1].size.width){
     wallScreen = allScreens[0];
-    floorScreen = allScreens[1];
+    floorScreen = allScreens[2];
   } else {
     floorScreen = allScreens[0];
-    wallScreen = allScreens[1];
+    wallScreen = allScreens[2];
   }
 
   console.log("Main screen",mainScreen);
@@ -256,6 +288,7 @@ function createWindow () {
                                   show: true,
                                   frame: false,
                                   webPreferences:{nodeIntegration: true, zoomFactor: 0.3}})
+
   // Now load the wall URL
   mainWindow.loadURL('file://' + __dirname + '/walltest.html');
   //console.log(wallScreen.size);
