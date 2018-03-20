@@ -125,6 +125,7 @@ var mouseController =
             //Math.PI/2; <-- good for cfire
             //2pi * pi/2 = pi
             theta = (perc * twoPI) + wallOffset;
+            console.log(xPos + "," + wb.x);
             //Clamp theta to [0, 2pi]
             if (theta > twoPI)
             {
@@ -134,12 +135,15 @@ var mouseController =
             //moving right to left
             if (xPos >= wb.x + wb.width)
             {
-              robot.moveMouse(wb.x, yPos);
+              console.log("Transitioning right to left")
+              robot.moveMouse(wb.x+5, yPos);
             }
-            /*if (xPos <= wb.x)
+            if (xPos < wb.x + 4)
             {
-              robot.moveMouse(wb.x+wb.width-1, yPos);
-            }*/
+              console.log("Transitioning left to right");
+              robot.moveMouse(wb.x+wb.width-5, yPos);
+              return;
+            }
             if (xPos > wb.x && yPos > wb.height-1)
             {
               var newRadius = fRadius - borderOffset;
@@ -260,8 +264,8 @@ function createWindow () {
 
   var screenElectron = electron.screen;
   //Mouse support entry point
-  var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
-  //mouseController.init(screenElectron);
+  //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
+  mouseController.init(screenElectron);
   var mainScreen = screenElectron.getPrimaryDisplay();
   var allScreens = screenElectron.getAllDisplays();
   var wallScreen = null;
