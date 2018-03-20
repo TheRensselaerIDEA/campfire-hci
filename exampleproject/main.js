@@ -111,7 +111,7 @@ var mouseController =
             twoPI = Math.PI * 2,
             //convert to radians
             //Theta's range = [0, 2*Pi]
-            angleOffset = 0;//Math.PI;
+            angleOffset = Math.PI/2;
 
             theta = perc * (twoPI) + angleOffset;
             if (theta > twoPI)
@@ -141,10 +141,10 @@ var mouseController =
         }
         var floorListener = function(xPos, yPos, fCx, fCy, borderOffset)
         {
-            var dx = xPos - fCx, 
+            var dx = xPos - fCx,
                 dy = yPos - fCy,
                 theta = calcTheta(dx, dy),
-                currentR = Math.sqrt(dx**2 + dy**2), 
+                currentR = Math.sqrt(dx**2 + dy**2),
                 offset = 539;
             //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
             if (currentR > offset)
@@ -153,8 +153,12 @@ var mouseController =
               // the value of x to be placed at on the wall screen.
               // I believe the y value is irrelevant because the mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
               var frac = theta/360;
-              var x = wb.x + (wb.width * frac);
-              var y = wb.height - borderOffset;  
+              var x = 4800 + (wb.x + (wb.width * frac));
+              if (x > 6400)
+              {
+                x = x - 6400;
+              }
+              var y = wb.height - borderOffset;
               robot.moveMouse(x, y);
              // console.log("\nFloor: Moved from " + xPos, yPos);
               //console.log("\nFloor: Moved to " + x + "," + y);
@@ -162,7 +166,7 @@ var mouseController =
         }
           var fCx = fb.x + (fb.width)/2,
               fCy = fb.y + (fb.height)/2,
-              wCx = wb.x + (wb.width)/2, 
+              wCx = wb.x + (wb.width)/2,
               wCy = (wb.y + wb.height)/2;
 
         //There is a mapping from f(f_x,f_y) -> w_x,w_y
@@ -264,8 +268,8 @@ function createWindow () {
                                    width:floorScreen.size.width, height:floorScreen.size.height,
                                    show: true,
                                    frame: false,
-                                   webPreferences:{nodeIntegration: true, zoomFactor: 0.83}})
- 
+                                   webPreferences:{nodeIntegration: true}})
+
  floorWindow.setContentSize(1920,1080);
   // Now load the floor URL
   //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
