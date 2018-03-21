@@ -1,0 +1,13 @@
+
+BrowserWindow {
+  _events: 
+   { blur: [Function],
+     focus: [Function],
+     show: [Function: visibilityChanged],
+     hide: [Function: visibilityChanged],
+     minimize: [Function: visibilityChanged],
+     maximize: [Function: visibilityChanged],
+     restore: [Function: visibilityChanged] },
+  _eventsCount: 7,
+  devToolsWebContents: [Getter] }
+Terminate batch job (Y/N)? Terminate batch job (Y/N)? Terminate batch job (Y/N)? 

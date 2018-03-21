@@ -3,11 +3,11 @@
   Date: 3/20/2018
   Advisors: Professors Jim Hendler and John Erickson
   Rensselaer Polytechnic Institute Master's Project Spring 2018
-  
-  
+
+
   Please see attached slides for references on figures which are crucial
   in explaining the logic behind this architecture.
-  
+
 
 
 
@@ -40,9 +40,9 @@ var mouseController =
       this.wallScreen = null;
       this.floorScreen = null;
 
-      this.floorOffset = 0.75, 
+      this.floorOffset = 0.75,
       this.wallOffset = 0.25;
-      this.params = 
+      this.params =
       {
         "screenWrap": true
       };
@@ -91,7 +91,7 @@ var mouseController =
         var onFloor = false;
         var params = this.params;
         //These functions are created in local scope to be used by the event listener.
-        var util = 
+        var util =
         {
           //Might be useful one day. not used in current implementation.
           getDir: function(x, y, lx, ly)
@@ -124,16 +124,17 @@ var mouseController =
           screenWrap: function(xPos, yPos, wb)
           {
               //moving right to left
-              if (xPos >= wb.x + wb.width)
+              if (yPos >= wb.height-2) return;
+              if (xPos >= (wb.x + wb.width)-2)
               {
                 console.log("Transitioning right to left")
-                robot.moveMouse(wb.x+5, yPos);
+                robot.moveMouse(wb.x+4, yPos);
               }
               //left to right
-              if (xPos < wb.x + 4)
+              else if (xPos < wb.x + 2)
               {
                 console.log("Transitioning left to right");
-                robot.moveMouse(wb.x+wb.width-5, yPos);
+                robot.moveMouse(wb.x+wb.width-4, yPos);
               }
               return;
           }
@@ -158,7 +159,7 @@ var mouseController =
             {
                 util.screenWrap(xPos, yPos, wb);
             }
-            if (xPos > wb.x && yPos > wb.height-1)
+            if (xPos > wb.x && yPos > (wb.height)-4)
             {
               var newRadius = fRadius - borderOffset;
               var x = fCx + (newRadius * Math.cos(theta));
@@ -176,11 +177,11 @@ var mouseController =
             //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
             if (currentR > fRadius)
             {
-              /* theta/360 outputs a number between 0,1 this fraction of the total wall screen width 
+              /* theta/360 outputs a number between 0,1 this fraction of the total wall screen width
                 determines x value to place on wall screen.
-                The y value is easily determined because the 
+                The y value is easily determined because the
                 mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
-              */ 
+              */
               var frac = theta/360,
               floorOffset = (wb.x + wb.width) * (userOffset);
 
@@ -204,13 +205,16 @@ var mouseController =
             fRadius = (fb.height/2)-1,
             //These two offsets determine an origin angle for both screens.
             //Due to the way the wall screen is oriented on top of the floor screen, these variables are required.
-            floorOffset = 0.75, 
-            wallOffset = 0.25; 
+            floorOffset = 0.75,
+            wallOffset = 0.25,
+            isOnFloor = false,
+            lastX = null, lastY = null;
         // Event Listener: Receives x and y positions of the mouse
         mouse.on('move', function(mouseX, mouseY)
         {
-          var lastX = mouseX, lastY = mouseY;
-          var isOnFloor = util.onFloor(mouseX, mouseY, fb);
+          lastX = mouseX,
+          lastY = mouseY;
+          isOnFloor = util.onFloor(mouseX, mouseY, fb);
           //Transitioning from floor to wall
           if (isOnFloor)
           {
@@ -239,7 +243,7 @@ var mouseController =
     {
       this.screens = this.setScreens(screen);
       this.listen(/*add parameters*/);
-      //this.rotateMouse();
+    //  this.rotateMouse();
     },
     setMode: function(args)
     {
@@ -297,8 +301,8 @@ function createWindow () {
     wallScreen = allScreens[1];
   }
 
-  console.log("Main screen",mainScreen);
-  console.log("all screens", allScreens)
+//  console.log("Main screen",mainScreen);
+//  console.log("all screens", allScreens)
 
   // Create a browser window for the "Wall"...
   // "Wall" should fill available screen
@@ -308,7 +312,7 @@ function createWindow () {
                                   width: wallScreen.size.width, height: wallScreen.size.height,
                                   show: true,
                                   frame: false,
-                                  webPreferences:{nodeIntegration: true, zoomFactor: 0.3}})
+                                  webPreferences:{nodeIntegration: true}})
 
   // Now load the wall URL
   mainWindow.loadURL('file://' + __dirname + '/walltest.html');
@@ -318,13 +322,14 @@ function createWindow () {
   // Floor on Campfire must be centered (x position)
   //floorWindow = new BrowserWindow({ frame:false, x:((1920-1080)/2)-1920, y:0, width:1080, height:800}, webPreferences:{nodeIntegration: false} )
   // "Floor" for debug should fill available screen
-  floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
-                                   width:floorScreen.size.width, height:floorScreen.size.height,
+  floorWindow = new BrowserWindow({x:floorScreen.bounds.x+170, y:floorScreen.bounds.y+80,
+                                   width:1920, height:1080,
                                    show: true,
-                                   frame: false,
+                                   frame:false,
                                    webPreferences:{nodeIntegration: true}})
 
- floorWindow.setContentSize(1920,1080);
+  floorWindow.setContentSize(1920,1080);
+  console.log(floorWindow);
   // Now load the floor URL
   //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
   floorWindow.loadURL('file://' + __dirname + '/floortest.html')
