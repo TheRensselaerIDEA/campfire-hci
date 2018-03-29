@@ -307,7 +307,8 @@ function createWindow () {
   // Create a browser window for the "Wall"...
   // "Wall" should fill available screen
 
-
+wallScreen.size.width = 6400;
+wallScreen.size.height = 800;
   mainWindow = new BrowserWindow({x: 0, y: 0,
                                   width: wallScreen.size.width, height: wallScreen.size.height,
                                   show: true,
@@ -315,15 +316,17 @@ function createWindow () {
                                   webPreferences:{nodeIntegration: true}})
 
   // Now load the wall URL
-  mainWindow.loadURL('file://' + __dirname + '/walltest.html');
+  mainWindow.setContentSize(6400,800);
+  mainWindow.loadURL('file://' + __dirname + '/images/wall_invert.png');
   //console.log(wallScreen.size);
   //console.log(mainWindow.getSize());
   // Create a browser window for the "Floor"...
   // Floor on Campfire must be centered (x position)
-  //floorWindow = new BrowserWindow({ frame:false, x:((1920-1080)/2)-1920, y:0, width:1080, height:800}, webPreferences:{nodeIntegration: false} )
   // "Floor" for debug should fill available screen
-  floorWindow = new BrowserWindow({x:floorScreen.bounds.x+170, y:floorScreen.bounds.y+80,
-                                   width:1920, height:1080,
+  floorScreen.bounds.width=1920;
+  floorScreen.bounds.height=1080;
+  floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+                                   width:floorScreen.bounds.width, height:floorScreen.bounds.height,
                                    show: true,
                                    frame:false,
                                    webPreferences:{nodeIntegration: true}})
@@ -332,7 +335,7 @@ function createWindow () {
   console.log(floorWindow);
   // Now load the floor URL
   //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
-  floorWindow.loadURL('file://' + __dirname + '/floortest.html')
+  floorWindow.loadURL('file://' + __dirname + '/images/target2_invert.png')
   floorWindow.setFullScreen(false);
   mainWindow.setFullScreen(false);
 
