@@ -35,20 +35,16 @@ var mainWindow = null;
 var mouseController =
 {
     //Initialize screen variables with electron.
-    setScreens: function(screen)
+    setScreens: function()
     {
       this.wallScreen = null;
       this.floorScreen = null;
 
       this.floorOffset = 0.75,
       this.wallOffset = 0.25;
-      this.params =
-      {
-        "screenWrap": true
-      };
-
-      var allScreens = screen.getAllDisplays();
-      var main = screen.getPrimaryDisplay();
+      this.screen = electron.screen;
+      var allScreens = this.screen.getAllDisplays();
+      var main = this.screen.getPrimaryDisplay();
       //console.log(allScreens);
         if (allScreens[0].size.width > allScreens[1].size.width)
         {
@@ -239,131 +235,98 @@ var mouseController =
         }
         );
     },
-    init: function(screen)
+    init: function(args)
     {
-      this.screens = this.setScreens(screen);
-      this.listen(/*add parameters*/);
-    //  this.rotateMouse();
-    },
-    setMode: function(args)
-    {
-      mouse.destroy();
-      mouse = require('win-mouse')()
-      if (args.length > 0)
-      {
-        var param;
-        for (var i = 0; i < args.length; i++)
-        {
-           console.log(args[i]);
-           param = args[i];
-           if (param.hasOwnProperty("floorOffset"))
-           {
-              this.floorOffset = param["floorOffset"];
-           }
-           // param = {"wallOffset": float from (0.0, 1.0) or degrees/360, radians/2pi}
-            if (param.hasOwnProperty("wallOffset"))
-           {
-              this.wallOffset = param["wallOffset"];
-           }
-           // param = {"trayMode": True or False}
-            if (param.hasOwnProperty("trayMode"))
-           {
-              this.trayMode = param["trayMode"];
-           }
-           if (param.hasOwnProperty("screenWrap"))
-           {
-              this.screenWrap = param["screenWrap"];
-           }
 
-        }
-      }
+      this.setArgs(args);
+      this.screens = this.setScreens();
+      this.createWindow();
       this.listen();
 
-    }
-}
-function createWindow () {
+    //  this.rotateMouse();
+    },
+    setArgs: function(args)
+    {
+      this.params = {};
+      if (Object.keys(args).length > 0)
+      {
+        var val, arg;
+        for (arg in args)
+        {
+          val = args[arg];
+          this.params[arg] = val;
+      }
+     }
+    },
+    createWindow: function() 
+        {
+        var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
+        var displayEnabled = this.params["display"];
+        var floorWindow = null, mainWindow = null;
+        //Mouse support entry point
+        //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
+        var mainScreen = this.screen.getPrimaryDisplay();
+        var allScreens = this.screen.getAllDisplays();
 
-  var screenElectron = electron.screen;
-  //Mouse support entry point
-  //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
-  mouseController.init(screenElectron);
-  var mainScreen = screenElectron.getPrimaryDisplay();
-  var allScreens = screenElectron.getAllDisplays();
-  var wallScreen = null;
-  var floorScreen = null;
+        mainWindow = new BrowserWindow({x: 0, y: 0,
+                                        width: wallScreen.size.width, height: wallScreen.size.height,
+                                        show: displayEnabled,
+                                        frame: false,
+                                        webPreferences:{nodeIntegration: true}})
 
-  // Wider screen should be the "Wall"
-  if (allScreens[0].size.width > allScreens[1].size.width){
-    wallScreen = allScreens[0];
-    floorScreen = allScreens[1];
-  } else {
-    floorScreen = allScreens[0];
-    wallScreen = allScreens[1];
-  }
+        // Now load the wall URL
+        mainWindow.setContentSize(6400,800);
+        mainWindow.loadURL('file://' + __dirname + '/images/wall_invert.png');
+        //console.log(wallScreen.size);
+        //console.log(mainWindow.getSize());
+        // Create a browser window for the "Floor"...
+        // Floor on Campfire must be centered (x position)
+        // "Floor" for debug should fill available screen
+        
 
-//  console.log("Main screen",mainScreen);
-//  console.log("all screens", allScreens)
+        floorScreen.bounds.width=1920;
+        floorScreen.bounds.height=1080;
 
-  // Create a browser window for the "Wall"...
-  // "Wall" should fill available screen
+        floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+                                         width:floorScreen.bounds.width, height:floorScreen.bounds.height,
+                                         show: displayEnabled,
+                                         frame:false,
+                                         webPreferences:{nodeIntegration: true}})
 
-wallScreen.size.width = 6400;
-wallScreen.size.height = 800;
-  mainWindow = new BrowserWindow({x: 0, y: 0,
-                                  width: wallScreen.size.width, height: wallScreen.size.height,
-                                  show: true,
-                                  frame: false,
-                                  webPreferences:{nodeIntegration: true}})
+        floorWindow.setContentSize(1920,1080);
+        // Now load the floor URL
+        //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
+        floorWindow.loadURL('file://' + __dirname + '/images/target2_invert.png');
+        floorWindow.setFullScreen(false);
+        mainWindow.setFullScreen(false);
 
-  // Now load the wall URL
-  mainWindow.setContentSize(6400,800);
-  mainWindow.loadURL('file://' + __dirname + '/images/wall_invert.png');
-  //console.log(wallScreen.size);
-  //console.log(mainWindow.getSize());
-  // Create a browser window for the "Floor"...
-  // Floor on Campfire must be centered (x position)
-  // "Floor" for debug should fill available screen
-  floorScreen.bounds.width=1920;
-  floorScreen.bounds.height=1080;
-  floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
-                                   width:floorScreen.bounds.width, height:floorScreen.bounds.height,
-                                   show: true,
-                                   frame:false,
-                                   webPreferences:{nodeIntegration: true}})
-
-  floorWindow.setContentSize(1920,1080);
-  console.log(floorWindow);
-  // Now load the floor URL
-  //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
-  floorWindow.loadURL('file://' + __dirname + '/images/target2_invert.png')
-  floorWindow.setFullScreen(false);
-  mainWindow.setFullScreen(false);
-
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-    floorWindow = null
-  })
+        // Emitted when the window is closed.
+        mainWindow.on('closed', function () {
+          // Dereference the window object, usually you would store windows
+          // in an array if your app supports multi windows, this is the time
+          // when you should delete the corresponding element.
+          mainWindow = null
+          floorWindow = null
+        })
+      }
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', function(){
+
+  mouseController.init({"display": true, "screenWrap": true});
+})
 
 // Quit when all windows are closed.
 
 
-app.on('activate', function () {
+/*app.on('activate', function () {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
     createWindow()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+*/
