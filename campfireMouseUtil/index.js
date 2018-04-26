@@ -15,10 +15,57 @@ var mouse = require('win-mouse')();
 
 // Parameters: An electron.screen object
 // Output: Enable mouse event listener and carry out functions based on user mouse positions (x,y).
-module.exports = function(electronScreen) {
+module.exports = function(electronScreen, args) {
 //MouseController object stores all code related to mouse utilities.
 var mouseController =
 {
+      createWindow: function() 
+        {
+        var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
+        var displayEnabled = this.params["display"];
+        var floorWindow = null, mainWindow = null;
+        
+        mainWindow = new BrowserWindow({x: 0, y: 0,
+                                        width: wallScreen.size.width, height: wallScreen.size.height,
+                                        show: displayEnabled,
+                                        frame: false,
+                                        webPreferences:{nodeIntegration: true}})
+
+        // Now load the wall URL
+        mainWindow.setContentSize(6400,800);
+        mainWindow.loadURL('file://' + __dirname + '/images/wall_invert.png');
+        //console.log(wallScreen.size);
+        //console.log(mainWindow.getSize());
+        // Create a browser window for the "Floor"...
+        // Floor on Campfire must be centered (x position)
+        // "Floor" for debug should fill available screen
+        
+
+        floorScreen.bounds.width=1920;
+        floorScreen.bounds.height=1080;
+
+        floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+                                         width:floorScreen.bounds.width, height:floorScreen.bounds.height,
+                                         show: displayEnabled,
+                                         frame:false,
+                                         webPreferences:{nodeIntegration: true}})
+
+        floorWindow.setContentSize(1920,1080);
+        // Now load the floor URL
+        //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
+        floorWindow.loadURL('file://' + __dirname + '/images/target2_invert.png');
+        floorWindow.setFullScreen(false);
+        mainWindow.setFullScreen(false);
+
+        // Emitted when the window is closed.
+        mainWindow.on('closed', function () {
+          // Dereference the window object, usually you would store windows
+          // in an array if your app supports multi windows, this is the time
+          // when you should delete the corresponding element.
+          mainWindow = null
+          floorWindow = null
+        })
+      },
     //Initialize screen variables with electron.
     setScreens: function(screen)
     {
@@ -237,12 +284,17 @@ var mouseController =
            }
         }
       }
+      
       this.listen();
 
     }
-}
+  }
   //TODO: process screen dimensions
-mouseController.init(electronScreen);
-  
-  
+ // mouseController.init(electronScreen);
+
+  app.on('ready', function()
+  {
+  mouseController.init({"display": true, "screenWrap": true});
+})
+  return mouseController;
 }

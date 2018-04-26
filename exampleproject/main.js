@@ -247,7 +247,10 @@ var mouseController =
     },
     setArgs: function(args)
     {
-      this.params = {};
+      this.params = {"display": true, 
+                     "screenWrap": true,
+                     "centerMode": false};
+
       if (Object.keys(args).length > 0)
       {
         var val, arg;
@@ -264,7 +267,7 @@ var mouseController =
         var displayEnabled = this.params["display"];
         var floorWindow = null, mainWindow = null;
         //Mouse support entry point
-        //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron);
+        //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron, args);
         var mainScreen = this.screen.getPrimaryDisplay();
         var allScreens = this.screen.getAllDisplays();
 
@@ -315,8 +318,7 @@ var mouseController =
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', function(){
-
-  mouseController.init({"display": true, "screenWrap": true});
+  mouseController.init({"display": false, "screenWrap": true});
 })
 
 // Quit when all windows are closed.
