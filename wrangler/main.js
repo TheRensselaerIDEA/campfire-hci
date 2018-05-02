@@ -329,10 +329,11 @@ app.on('ready', function(){
         //'file://' + __dirname + '/images/wall_invert.png'
 var fileDir = 'file://' + __dirname
 //'http://bit.ly/CampfireFloorSlide'
-var floorURL =  fileDir + '/images/wall_invert.png';
+var floorURL = 'http://bit.ly/CampfireFloorSlide';
 var wallURL = 'http://bit.ly/CampfireWallSlide';
 
-var mouseutil = require('@campfirehci/mouseutil')({ "display": true,
+var mouseutil = require('@campfirehci/mouseutil')({ "fullscreen": true,
+                                                    "display": true,
                                                     "screenWrap": true,
                                                     "floorURL": floorURL,
                                                     "wallURL": wallURL });

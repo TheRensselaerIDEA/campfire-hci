@@ -40,6 +40,7 @@ var mouseController =
       this.params = {"display": true, 
                      "screenwrap": true,
                      "centermode": false,
+                     "fullscreen": true,
                      "floorurl": 'http://bit.ly/CampfireFloorSlide',
                      "wallurl": 'http://bit.ly/CampfireWallSlide' };
 
@@ -69,7 +70,7 @@ var mouseController =
         if (allScreens[0].size.width > allScreens[1].size.width)
         {
           this.wallScreen = allScreens[0];
-          this.floorScreen = allScreens[1];
+          this.floorScreen = allScreens[1]
         }
         else
         {
@@ -89,14 +90,13 @@ var mouseController =
       //Mouse support entry point
       //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron, args);
       var mainScreen = this.screen.getPrimaryDisplay(), allScreens = this.screen.getAllDisplays();
-
-      mainWindow = new BrowserWindow({x: 0, y: 0,
-                                      width: wallScreen.size.width, height: wallScreen.size.height,
+      mainWindow = new BrowserWindow({x: wallScreen.bounds.x, y: wallScreen.bounds.y,
+                                      width: wallScreen.bounds.width, height: wallScreen.bounds.height,
                                       show: displayEnabled,
                                       frame: false,
                                       webPreferences:{nodeIntegration: true}})
      //Forced setting to fit window to campfire screens
-      mainWindow.setContentSize(6400,800);
+     mainWindow.setContentSize(6400,800);
       
       
       mainWindow.loadURL(wallURL);
@@ -104,21 +104,25 @@ var mouseController =
       // Create a browser window for the "Floor"...
       // Floor on Campfire must be centered (x position)
       // "Floor" for debug should fill available screen
-      floorScreen.bounds.width=1920;
-      floorScreen.bounds.height=1080;
+     floorScreen.bounds.width=1920;
+     floorScreen.bounds.height=1080;
 
-      floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+    floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
                                        width:floorScreen.bounds.width, height:floorScreen.bounds.height,
                                        show: displayEnabled,
                                        frame:false,
                                        webPreferences:{nodeIntegration: true}})
-
       floorWindow.setContentSize(1920,1080);
       // Now load the floor URL
       
       floorWindow.loadURL(floorURL);
-      floorWindow.setFullScreen(false);
-      mainWindow.setFullScreen(false);
+
+
+
+      var fullScreen = this.params["fullscreen"] 
+
+      floorWindow.setFullScreen(fullScreen);
+      mainWindow.setFullScreen(fullScreen);
 
       // Emitted when the window is closed.
       mainWindow.on('closed', function () {
@@ -185,7 +189,7 @@ var mouseController =
                 robot.moveMouse(wb.x+4, yPos);
               }
               //left to right
-              else if (xPos < wb.x + 2)
+              else if (xPos < wb.x + 4)
               {
                 console.log("Transitioning left to right");
                 robot.moveMouse(wb.x+wb.width-4, yPos);

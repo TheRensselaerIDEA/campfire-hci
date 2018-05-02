@@ -6,7 +6,7 @@
     "electron-rebuild": "^1.7.3"
   },
   "dependencies": {
-    "@campfirehci/mouseutil": "^1.0.7",
+    "@campfirehci/mouseutil": "^1.1.0",
     "electron": "^1.8.6",
     "keypress": "^0.2.1",
     "mouse": "0.0.1",
