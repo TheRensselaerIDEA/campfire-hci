@@ -13,7 +13,7 @@
 
 
 */
-'use strict';
+/*'use strict';
 
 const electron = require('electron');
 const robot = require('robotjs');
@@ -173,11 +173,11 @@ var mouseController =
             //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
             if (currentR > fRadius)
             {
-              /* theta/360 outputs a number between 0,1 this fraction of the total wall screen width
+               theta/360 outputs a number between 0,1 this fraction of the total wall screen width
                 determines x value to place on wall screen.
                 The y value is easily determined because the
                 mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
-              */
+              
               var frac = theta/360,
               floorOffset = (wb.x + wb.width) * (userOffset);
 
@@ -222,7 +222,7 @@ var mouseController =
             wallListener(mouseX, mouseY, fCx, fCy, fRadius, wallOffset, borderOffset);
           }
           //DEBUGGING!!!
-/*          debug = "";
+          debug = "";
          debug += "\nOnFloor = " + isOnFloor
           debug += "\n(LastX, LastY): " + "(" + lastX + "," + lastY + ")";
          debug += "\n Current R - " + currentR;
@@ -231,7 +231,7 @@ var mouseController =
          debug += "\nFloor Center" + fCx + "," + fCy;
           debug += "\n(Theta): " + "(" + theta + ")";
          debug += "\n" + fCx + "," + fCy;
-*/          //DEBUGGING!!
+          //DEBUGGING!!
         }
         );
     },
@@ -319,8 +319,16 @@ var mouseController =
 // Some APIs can only be used after this event occurs.
 app.on('ready', function(){
   mouseController.init({"display": false, "screenWrap": true});
-})
+})*/
 
+/*"floorURL": 'http://bit.ly/CampfireFloorSlide'
+                     "wallURL": 'http://bit.ly/CampfireWallSlide' 
+
+*/
+var mouseutil = require('@campfirehci/mouseutil')({ "display": true,
+                                                    "screenWrap": true,
+                                                    "floorURL": 'http://bit.ly/CampfireFloorSlide',
+                                                    "wallURL": 'http://bit.ly/CampfireWallSlide' });
 // Quit when all windows are closed.
 
 

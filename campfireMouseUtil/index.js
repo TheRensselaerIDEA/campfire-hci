@@ -9,84 +9,47 @@
   in explaining the logic behind this architecture.
 */
 'use strict';
-const electron = require('electron');
-const robot = require('robotjs');
-var mouse = require('win-mouse')();
+
+
+
 
 // Parameters: An electron.screen object
 // Output: Enable mouse event listener and carry out functions based on user mouse positions (x,y).
-module.exports = function(electronScreen, args) {
+module.exports = function(args) {
+  const electron = require('electron');
+const robot = require('robotjs');
+var mouse = require('win-mouse')();
+// Module to control application life.
+const app = electron.app;
+// Module to create native browser window.
+const BrowserWindow = electron.BrowserWindow;
+
+const path = require('path');
+const url = require('url');
 //MouseController object stores all code related to mouse utilities.
 var mouseController =
 {
-      createWindow: function() 
-        {
-        var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
-        var displayEnabled = this.params["display"];
-        var floorWindow = null, mainWindow = null;
-        
-        mainWindow = new BrowserWindow({x: 0, y: 0,
-                                        width: wallScreen.size.width, height: wallScreen.size.height,
-                                        show: displayEnabled,
-                                        frame: false,
-                                        webPreferences:{nodeIntegration: true}})
-
-        // Now load the wall URL
-        mainWindow.setContentSize(6400,800);
-        mainWindow.loadURL('file://' + __dirname + '/images/wall_invert.png');
-        //console.log(wallScreen.size);
-        //console.log(mainWindow.getSize());
-        // Create a browser window for the "Floor"...
-        // Floor on Campfire must be centered (x position)
-        // "Floor" for debug should fill available screen
-        
-
-        floorScreen.bounds.width=1920;
-        floorScreen.bounds.height=1080;
-
-        floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
-                                         width:floorScreen.bounds.width, height:floorScreen.bounds.height,
-                                         show: displayEnabled,
-                                         frame:false,
-                                         webPreferences:{nodeIntegration: true}})
-
-        floorWindow.setContentSize(1920,1080);
-        // Now load the floor URL
-        //https://lp01.idea.rpi.edu/shiny/erickj4/swotr/?view=Floor
-        floorWindow.loadURL('file://' + __dirname + '/images/target2_invert.png');
-        floorWindow.setFullScreen(false);
-        mainWindow.setFullScreen(false);
-
-        // Emitted when the window is closed.
-        mainWindow.on('closed', function () {
-          // Dereference the window object, usually you would store windows
-          // in an array if your app supports multi windows, this is the time
-          // when you should delete the corresponding element.
-          mainWindow = null
-          floorWindow = null
-        })
-      },
     //Initialize screen variables with electron.
-    setScreens: function(screen)
+    setScreens: function()
     {
       this.wallScreen = null;
       this.floorScreen = null;
 
-      this.floorOffset = 0.75, 
-      this.wallOffset = 0.25; 
-
-      var allScreens = screen.getAllDisplays();
-      var main = screen.getPrimaryDisplay();
+      this.floorOffset = 0.75,
+      this.wallOffset = 0.25;
+      this.screen = electron.screen;
+      var allScreens = this.screen.getAllDisplays();
+      var main = this.screen.getPrimaryDisplay();
       //console.log(allScreens);
         if (allScreens[0].size.width > allScreens[1].size.width)
         {
           this.wallScreen = allScreens[0];
-          this.floorScreen = allScreens[2];
+          this.floorScreen = allScreens[1];
         }
         else
         {
           this.floorScreen = allScreens[0];
-          this.wallScreen = allScreens[2];
+          this.wallScreen = allScreens[1];
         }
     },
     rotateMouse: function()
@@ -117,35 +80,56 @@ var mouseController =
         var usingCampfire = true;
         var borderOffset = 30;
         var onFloor = false;
+        var params = this.params;
         //These functions are created in local scope to be used by the event listener.
-        //Checks change between last position(lx, ly) current position(x,y)
-        var getDir = function(x, y, lx, ly)
+        var util =
         {
-          var hDir, vDir;
+          //Might be useful one day. not used in current implementation.
+          getDir: function(x, y, lx, ly)
+          {
+            var hDir, vDir;
+            //Checks change between last position(lx, ly) current position(x,y)
+            hDir = lx < x ? "right" : "left";
+            vDir = ly < y ? "down" : "up";
 
-          hDir = lx < x ? "right" : "left";
-          vDir = ly < y ? "down" : "up";
-
-          vDir = ly - y == 0 ?  vDir = "null" : vDir;
-          hDir = lx - x == 0 ?  hDir = "null" : hDir;
-          return [hDir, vDir];
-        }
+            vDir = ly - y == 0 ?  vDir = "null" : vDir;
+            hDir = lx - x == 0 ?  hDir = "null" : hDir;
+            return [hDir, vDir];
+          },
+          //Input: dx: distance between centerx and mousex
+          //       dy: distance between centery and mousey
+          //Output: degrees from origin angle
+          calcTheta: function(dx, dy)
+          {
+            //degree of angle
+            var t = Math.atan2(dy,dx) * 180 / Math.PI;
+            if (t < 0) t = 360 + t;
+            return t
+          },
           //determines if the mouse cursor is within the boundaries of the floor, else we are on the wall.
-        var onFloor = function(x,y)
-        {
-          return ((x <= fb.x + fb.width && x >= fb.x) &&
-             (y <= fb.y + fb.height && y >= fb.y));
-        }
-        //Input: dx: distance between centerx and mousex
-        //       dy: distance between centery and mousey
-
-        //Output: 
-        var calcTheta = function(dx, dy)
-        {
-          //degree of angle
-          var t = Math.atan2(dy,dx) * 180 / Math.PI;
-          if (t < 0) t = 360 + t;
-          return t
+          onFloor: function(x,y, fb)
+          {
+            return ((x <= fb.x + fb.width && x >= fb.x) &&
+               (y <= fb.y + fb.height && y >= fb.y));
+          },
+          screenWrap: function(xPos, yPos, wb)
+          {
+              //moving right to left
+              if (yPos >= wb.height-2) return;
+              
+              if (xPos >= (wb.x + wb.width)-2)
+              {
+                console.log("Transitioning right to left")
+                robot.moveMouse(wb.x+4, yPos);
+              }
+              //left to right
+              else if (xPos < wb.x + 2)
+              {
+                console.log("Transitioning left to right");
+                robot.moveMouse(wb.x+wb.width-4, yPos);
+              }
+              return;
+          }
         }
         var wallListener = function(xPos, yPos, fCx, fCy, fRadius, userOffset, borderOffset)
         {
@@ -162,17 +146,12 @@ var mouseController =
             {
               theta = Math.abs(theta - twoPI);
             }
-            //case for reaching vertical border, the mouse should appear on the opposite border.
-            //moving right to left
-            if (xPos >= wb.x + wb.width)
+            //case for reaching vertical border, the mouse appears on the opposite border.
+            if (params["screenWrap"])
             {
-              robot.moveMouse(wb.x, yPos);
+                util.screenWrap(xPos, yPos, wb);
             }
-            /*if (xPos <= wb.x)
-            {
-              robot.moveMouse(wb.x+wb.width-1, yPos);
-            }*/
-            if (xPos > wb.x && yPos > wb.height-1)
+            if (xPos > wb.x && yPos > (wb.height)-4)
             {
               var newRadius = fRadius - borderOffset;
               var x = fCx + (newRadius * Math.cos(theta));
@@ -184,17 +163,17 @@ var mouseController =
         {
             var dx = xPos - fCx,
                 dy = yPos - fCy,
-                theta = calcTheta(dx, dy),
+                theta = util.calcTheta(dx, dy),
                 currentR = Math.sqrt(dx**2 + dy**2);
 
             //Placeholder for threshold, should check if radius from center to mouse is greater than the screen border
             if (currentR > fRadius)
             {
-              /* theta/360 outputs a number between 0,1 this fraction of the total wall screen width 
+              /* theta/360 outputs a number between 0,1 this fraction of the total wall screen width
                 determines x value to place on wall screen.
-                The y value is easily determined because the 
+                The y value is easily determined because the
                 mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
-              */ 
+              */
               var frac = theta/360,
               floorOffset = (wb.x + wb.width) * (userOffset);
 
@@ -209,25 +188,25 @@ var mouseController =
               robot.moveMouse(x, y);
             }
         }
-              //Center of screen is (origin + length) / 2
-          var fCx = fb.x + (fb.width)/2,
-              fCy = fb.y + (fb.height)/2,
-              wCx = wb.x + (wb.width)/2,
-              wCy = (wb.y + wb.height)/2,
-              //Radius of floor circle, used to determine threshold for transitioning to wall.
-              fRadius = (fb.height/2)-1,
-              //These two offsets determine an origin angle for both screens.
-              //Due to the way the wall screen is oriented on top of the floor screen, these variables are required.
-              floorOffset = 0.75, 
-              wallOffset = 0.25; 
+        //Center of screen is (origin + length) / 2
+        var fCx = fb.x + (fb.width)/2,
+            fCy = fb.y + (fb.height)/2,
+            wCx = wb.x + (wb.width)/2,
+            wCy = (wb.y + wb.height)/2,
+            //Radius of floor circle, used to determine threshold for transitioning to wall.
+            fRadius = (fb.height/2)-1,
+            //These two offsets determine an origin angle for both screens.
+            //Due to the way the wall screen is oriented on top of the floor screen, these variables are required.
+            floorOffset = 0.75,
+            wallOffset = 0.25,
+            isOnFloor = false,
+            lastX = null, lastY = null;
         // Event Listener: Receives x and y positions of the mouse
         mouse.on('move', function(mouseX, mouseY)
         {
-          var lastX = mouseX, lastY = mouseY;
-          var isOnFloor = onFloor(mouseX, mouseY, fb);
-          //Floor radius from center of floor
-          //Wall radius from center of wall
-          //current radius from center of current screen
+          lastX = mouseX,
+          lastY = mouseY;
+          isOnFloor = util.onFloor(mouseX, mouseY, fb);
           //Transitioning from floor to wall
           if (isOnFloor)
           {
@@ -239,62 +218,100 @@ var mouseController =
             wallListener(mouseX, mouseY, fCx, fCy, fRadius, wallOffset, borderOffset);
           }
           //DEBUGGING!!!
-          var debug = "";
-         // debug += "\nOnFloor = " + isOnFloor
-          //debug += "\n(LastX, LastY): " + "(" + lastX + "," + lastY + ")";
-         // debug += "\n Current R - " + currentR;
-          //debug += "\n(Mx, My): " + "(" + xPos + "," + yPos + ")";
-         // debug += "\nWall Center: " + wCx + "," + (wCy);
-          debug += "\nFloor Center" + fCx + "," + fCy;
-          //debug += "\n(Theta): " + "(" + theta + ")";
-         // debug += "\n" + fCx + "," + fCy;
-          //DEBUGGING!!
+/*          debug = "";
+         debug += "\nOnFloor = " + isOnFloor
+          debug += "\n(LastX, LastY): " + "(" + lastX + "," + lastY + ")";
+         debug += "\n Current R - " + currentR;
+          debug += "\n(Mx, My): " + "(" + xPos + "," + yPos + ")";
+         debug += "\nWall Center: " + wCx + "," + (wCy);
+         debug += "\nFloor Center" + fCx + "," + fCy;
+          debug += "\n(Theta): " + "(" + theta + ")";
+         debug += "\n" + fCx + "," + fCy;
+*/          //DEBUGGING!!
         }
         );
     },
-    init: function(screen)
+    init: function(args)
     {
-      this.screens = this.setScreens(screen);
-      this.listen(/*add parameters*/);
-      //this.rotateMouse();
-    },
-    setMode: function(args)
-    {
-      mouse.destroy();
-      mouse = require('win-mouse')()
-      if (args.length > 0)
-      {
-        var param;
-        for (var i = 0; i < args.length; i++){
-           console.log(args[i]);
-           param = args[i];
-           if (param.hasOwnProperty("floorOffset"))
-           {
-              this.floorOffset = param["floorOffset"];
-           }
-           // param = {"wallOffset": float from (0.0, 1.0) or degrees/360, radians/2pi}
-            if (param.hasOwnProperty("wallOffset"))
-           {
-              this.wallOffset = param["wallOffset"];
-           }
-           // param = {"trayMode": True or False}
-            if (param.hasOwnProperty("trayMode"))
-           {
-              this.trayMode = param["trayMode"];
-           }
-        }
-      }
-      
+
+      this.setArgs(args);
+      this.screens = this.setScreens();
+      this.createWindow();
       this.listen();
 
-    }
-  }
-  //TODO: process screen dimensions
- // mouseController.init(electronScreen);
+    //  this.rotateMouse();
+    },
+    setArgs: function(args)
+    {
+      this.params = {"display": true, 
+                     "screenWrap": true,
+                     "centerMode": false};
 
+      if (Object.keys(args).length > 0)
+      {
+        var val, arg;
+        for (arg in args)
+        {
+          val = args[arg];
+          this.params[arg] = val;
+      }
+     }
+    },
+    createWindow: function() 
+        {
+        var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
+        var displayEnabled = this.params["display"];
+        var floorWindow = null, mainWindow = null;
+        //Mouse support entry point
+        //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron, args);
+        var mainScreen = this.screen.getPrimaryDisplay();
+        var allScreens = this.screen.getAllDisplays();
+
+        mainWindow = new BrowserWindow({x: 0, y: 0,
+                                        width: wallScreen.size.width, height: wallScreen.size.height,
+                                        show: displayEnabled,
+                                        frame: false,
+                                        webPreferences:{nodeIntegration: true}})
+
+        // Now load the wall URL
+        mainWindow.setContentSize(6400,800);
+        
+        
+        mainWindow.loadURL('http://bit.ly/CampfireWallSlide');
+        //'file://' + __dirname + '/images/wall_invert.png'
+        // Create a browser window for the "Floor"...
+        // Floor on Campfire must be centered (x position)
+        // "Floor" for debug should fill available screen
+        floorScreen.bounds.width=1920;
+        floorScreen.bounds.height=1080;
+
+        floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+                                         width:floorScreen.bounds.width, height:floorScreen.bounds.height,
+                                         show: displayEnabled,
+                                         frame:false,
+                                         webPreferences:{nodeIntegration: true}})
+
+        floorWindow.setContentSize(1920,1080);
+        // Now load the floor URL
+        
+        floorWindow.loadURL('http://bit.ly/CampfireFloorSlide');
+        //'file://' + __dirname + '/images/target2_invert.png'
+        floorWindow.setFullScreen(false);
+        mainWindow.setFullScreen(false);
+
+        // Emitted when the window is closed.
+        mainWindow.on('closed', function () {
+          // Dereference the window object, usually you would store windows
+          // in an array if your app supports multi windows, this is the time
+          // when you should delete the corresponding element.
+          mainWindow = null
+          floorWindow = null
+        })
+      }
+}
   app.on('ready', function()
   {
-  mouseController.init({"display": true, "screenWrap": true});
-})
+    mouseController.init(args);
+  })
   return mouseController;
 }
