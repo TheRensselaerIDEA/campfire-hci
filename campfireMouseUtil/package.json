@@ -1,7 +1,7 @@
 {
-  "name": "@fangt/campfiremouseutil",
-  "version": "3.0.0",
-  "description": "Electron powered Mouse utility package for handling user interactions on the Campfire at Rensselaer Polytechnic Institute.",
+  "name": "@campfirehci/mouseutil",
+  "version": "1.0.7",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

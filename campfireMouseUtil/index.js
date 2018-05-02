@@ -10,9 +10,6 @@
 */
 'use strict';
 
-
-
-
 // Parameters: An electron.screen object
 // Output: Enable mouse event listener and carry out functions based on user mouse positions (x,y).
 module.exports = function(args) {
@@ -30,6 +27,34 @@ const url = require('url');
 var mouseController =
 {
     //Initialize screen variables with electron.
+    init: function(args)
+    {
+      this.setArgs(args);
+      this.screens = this.setScreens();
+      this.createWindow();
+      this.listener();
+    },
+    setArgs: function(args)
+    {
+      //These are the default values.
+      this.params = {"display": true, 
+                     "screenwrap": true,
+                     "centermode": false,
+                     "floorurl": 'http://bit.ly/CampfireFloorSlide',
+                     "wallurl": 'http://bit.ly/CampfireWallSlide' };
+
+
+      if (Object.keys(args).length > 0)
+      {
+        var val, arg;
+        for (arg in args)
+        {
+          val = args[arg];
+          arg = arg.toLowerCase();
+          this.params[arg] = val;
+      }
+     }
+    },
     setScreens: function()
     {
       this.wallScreen = null;
@@ -52,6 +77,58 @@ var mouseController =
           this.wallScreen = allScreens[1];
         }
     },
+    createWindow: function() 
+    {
+      //Set screen variables to electron screen objects
+      var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
+      var floorWindow = null, mainWindow = null;
+      //Set local variables to values of arguments.
+      var displayEnabled = this.params["display"];
+      var wallURL = this.params["wallurl"], floorURL = this.params["floorurl"];
+
+      //Mouse support entry point
+      //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron, args);
+      var mainScreen = this.screen.getPrimaryDisplay(), allScreens = this.screen.getAllDisplays();
+
+      mainWindow = new BrowserWindow({x: 0, y: 0,
+                                      width: wallScreen.size.width, height: wallScreen.size.height,
+                                      show: displayEnabled,
+                                      frame: false,
+                                      webPreferences:{nodeIntegration: true}})
+     //Forced setting to fit window to campfire screens
+      mainWindow.setContentSize(6400,800);
+      
+      
+      mainWindow.loadURL(wallURL);
+      //'file://' + __dirname + '/images/wall_invert.png'
+      // Create a browser window for the "Floor"...
+      // Floor on Campfire must be centered (x position)
+      // "Floor" for debug should fill available screen
+      floorScreen.bounds.width=1920;
+      floorScreen.bounds.height=1080;
+
+      floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+                                       width:floorScreen.bounds.width, height:floorScreen.bounds.height,
+                                       show: displayEnabled,
+                                       frame:false,
+                                       webPreferences:{nodeIntegration: true}})
+
+      floorWindow.setContentSize(1920,1080);
+      // Now load the floor URL
+      
+      floorWindow.loadURL(floorURL);
+      floorWindow.setFullScreen(false);
+      mainWindow.setFullScreen(false);
+
+      // Emitted when the window is closed.
+      mainWindow.on('closed', function () {
+        // Dereference the window object, usually you would store windows
+        // in an array if your app supports multi windows, this is the time
+        // when you should delete the corresponding element.
+        mainWindow = null
+        floorWindow = null
+      })
+  },
     rotateMouse: function()
     {
       this.floorSize = this.floorScreen.size;
@@ -70,32 +147,18 @@ var mouseController =
         console.log("ROBOT MOVING:" + x + "," + y + "," + a);
       }
     },
-    listen: function()
+    listener: function()
     {
         var wall = this.wallScreen,
             floor = this.floorScreen;
         var fb = floor.bounds, wb = wall.bounds;
         var mPos = robot.getMousePos();
-        var lastX = mPos.x, lastY = mPos.y;
-        var usingCampfire = true;
         var borderOffset = 30;
         var onFloor = false;
         var params = this.params;
         //These functions are created in local scope to be used by the event listener.
         var util =
         {
-          //Might be useful one day. not used in current implementation.
-          getDir: function(x, y, lx, ly)
-          {
-            var hDir, vDir;
-            //Checks change between last position(lx, ly) current position(x,y)
-            hDir = lx < x ? "right" : "left";
-            vDir = ly < y ? "down" : "up";
-
-            vDir = ly - y == 0 ?  vDir = "null" : vDir;
-            hDir = lx - x == 0 ?  hDir = "null" : hDir;
-            return [hDir, vDir];
-          },
           //Input: dx: distance between centerx and mousex
           //       dy: distance between centery and mousey
           //Output: degrees from origin angle
@@ -116,7 +179,6 @@ var mouseController =
           {
               //moving right to left
               if (yPos >= wb.height-2) return;
-              
               if (xPos >= (wb.x + wb.width)-2)
               {
                 console.log("Transitioning right to left")
@@ -147,7 +209,7 @@ var mouseController =
               theta = Math.abs(theta - twoPI);
             }
             //case for reaching vertical border, the mouse appears on the opposite border.
-            if (params["screenWrap"])
+            if (params["screenwrap"])
             {
                 util.screenWrap(xPos, yPos, wb);
             }
@@ -204,8 +266,6 @@ var mouseController =
         // Event Listener: Receives x and y positions of the mouse
         mouse.on('move', function(mouseX, mouseY)
         {
-          lastX = mouseX,
-          lastY = mouseY;
           isOnFloor = util.onFloor(mouseX, mouseY, fb);
           //Transitioning from floor to wall
           if (isOnFloor)
@@ -230,84 +290,9 @@ var mouseController =
 */          //DEBUGGING!!
         }
         );
-    },
-    init: function(args)
-    {
+    }
 
-      this.setArgs(args);
-      this.screens = this.setScreens();
-      this.createWindow();
-      this.listen();
 
-    //  this.rotateMouse();
-    },
-    setArgs: function(args)
-    {
-      this.params = {"display": true, 
-                     "screenWrap": true,
-                     "centerMode": false};
-
-      if (Object.keys(args).length > 0)
-      {
-        var val, arg;
-        for (arg in args)
-        {
-          val = args[arg];
-          this.params[arg] = val;
-      }
-     }
-    },
-    createWindow: function() 
-        {
-        var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
-        var displayEnabled = this.params["display"];
-        var floorWindow = null, mainWindow = null;
-        //Mouse support entry point
-        //var mouseutil = require('@fangt/campfiremouseutil')(screenElectron, args);
-        var mainScreen = this.screen.getPrimaryDisplay();
-        var allScreens = this.screen.getAllDisplays();
-
-        mainWindow = new BrowserWindow({x: 0, y: 0,
-                                        width: wallScreen.size.width, height: wallScreen.size.height,
-                                        show: displayEnabled,
-                                        frame: false,
-                                        webPreferences:{nodeIntegration: true}})
-
-        // Now load the wall URL
-        mainWindow.setContentSize(6400,800);
-        
-        
-        mainWindow.loadURL('http://bit.ly/CampfireWallSlide');
-        //'file://' + __dirname + '/images/wall_invert.png'
-        // Create a browser window for the "Floor"...
-        // Floor on Campfire must be centered (x position)
-        // "Floor" for debug should fill available screen
-        floorScreen.bounds.width=1920;
-        floorScreen.bounds.height=1080;
-
-        floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
-                                         width:floorScreen.bounds.width, height:floorScreen.bounds.height,
-                                         show: displayEnabled,
-                                         frame:false,
-                                         webPreferences:{nodeIntegration: true}})
-
-        floorWindow.setContentSize(1920,1080);
-        // Now load the floor URL
-        
-        floorWindow.loadURL('http://bit.ly/CampfireFloorSlide');
-        //'file://' + __dirname + '/images/target2_invert.png'
-        floorWindow.setFullScreen(false);
-        mainWindow.setFullScreen(false);
-
-        // Emitted when the window is closed.
-        mainWindow.on('closed', function () {
-          // Dereference the window object, usually you would store windows
-          // in an array if your app supports multi windows, this is the time
-          // when you should delete the corresponding element.
-          mainWindow = null
-          floorWindow = null
-        })
-      }
 }
   app.on('ready', function()
   {

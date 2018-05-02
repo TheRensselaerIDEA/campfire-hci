@@ -325,10 +325,17 @@ app.on('ready', function(){
                      "wallURL": 'http://bit.ly/CampfireWallSlide' 
 
 */
+
+        //'file://' + __dirname + '/images/wall_invert.png'
+var fileDir = 'file://' + __dirname
+//'http://bit.ly/CampfireFloorSlide'
+var floorURL =  fileDir + '/images/wall_invert.png';
+var wallURL = 'http://bit.ly/CampfireWallSlide';
+
 var mouseutil = require('@campfirehci/mouseutil')({ "display": true,
                                                     "screenWrap": true,
-                                                    "floorURL": 'http://bit.ly/CampfireFloorSlide',
-                                                    "wallURL": 'http://bit.ly/CampfireWallSlide' });
+                                                    "floorURL": floorURL,
+                                                    "wallURL": wallURL });
 // Quit when all windows are closed.
 
 
