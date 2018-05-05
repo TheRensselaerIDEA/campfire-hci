@@ -43,8 +43,6 @@ var mouseController =
                      "fullscreen": true,
                      "floorurl": 'http://bit.ly/CampfireFloorSlide',
                      "wallurl": 'http://bit.ly/CampfireWallSlide' };
-
-
       if (Object.keys(args).length > 0)
       {
         var val, arg;
@@ -53,8 +51,8 @@ var mouseController =
           val = args[arg];
           arg = arg.toLowerCase();
           this.params[arg] = val;
+        }
       }
-     }
     },
     setScreens: function()
     {
@@ -96,7 +94,7 @@ var mouseController =
                                       frame: false,
                                       webPreferences:{nodeIntegration: true}})
      //Forced setting to fit window to campfire screens
-     mainWindow.setContentSize(6400,800);
+      mainWindow.setContentSize(6400,800);
       
       
       mainWindow.loadURL(wallURL);
@@ -104,10 +102,10 @@ var mouseController =
       // Create a browser window for the "Floor"...
       // Floor on Campfire must be centered (x position)
       // "Floor" for debug should fill available screen
-     floorScreen.bounds.width=1920;
-     floorScreen.bounds.height=1080;
+      floorScreen.bounds.width=1920;
+      floorScreen.bounds.height=1080;
 
-    floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+      floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
                                        width:floorScreen.bounds.width, height:floorScreen.bounds.height,
                                        show: displayEnabled,
                                        frame:false,
@@ -125,14 +123,15 @@ var mouseController =
       mainWindow.setFullScreen(fullScreen);
 
       // Emitted when the window is closed.
-      mainWindow.on('closed', function () {
+      mainWindow.on('closed', function () 
+      {
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null
         floorWindow = null
       })
-  },
+    },
     rotateMouse: function()
     {
       this.floorSize = this.floorScreen.size;
@@ -295,8 +294,6 @@ var mouseController =
         }
         );
     }
-
-
 }
   app.on('ready', function()
   {
