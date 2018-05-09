@@ -1,7 +1,7 @@
-#campfire-hci
+# Campfire-Hci
 Code related to HCI extensions for the IDEA Campfire
 
-#How to run
+# How to run
 1. cd ./../path/to/campfire-hci
 2. cd wrangler
 3. npm install
@@ -11,7 +11,7 @@ If there are compatibility errors with electron, run this command in the directo
 npm rebuild --runtime=electron --target=1.8.2 --disturl=https://atom.io/download/atom-shell --abi=48
 ```
 
-#How to include mouse utils
+# How to include mouse utils
 1. ```npm install @fangt/campfiremouseutil```
 2. include in app.js
 ```javascript
@@ -19,7 +19,7 @@ var screen = electron.screen;
 var mouseutil = require('@fangt/campfiremouseutil')(screen);
 ```
 
-#Additional dependencies:
+# Additional dependencies:
 1. MSBuildTools
 	- http://landinghub.visualstudio.com/visual-cpp-build-tools
 2. Python 2.7
