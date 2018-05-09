@@ -43,6 +43,8 @@ var mouseController =
                      "fullscreen": true,
                      "floorurl": 'http://bit.ly/CampfireFloorSlide',
                      "wallurl": 'http://bit.ly/CampfireWallSlide' };
+
+
       if (Object.keys(args).length > 0)
       {
         var val, arg;
@@ -51,8 +53,8 @@ var mouseController =
           val = args[arg];
           arg = arg.toLowerCase();
           this.params[arg] = val;
-        }
       }
+     }
     },
     setScreens: function()
     {
@@ -76,7 +78,7 @@ var mouseController =
           this.wallScreen = allScreens[1];
         }
     },
-    createWindow: function() 
+    createWindow: function()  
     {
       //Set screen variables to electron screen objects
       var floorScreen = this.floorScreen, wallScreen = this.wallScreen;
@@ -94,7 +96,7 @@ var mouseController =
                                       frame: false,
                                       webPreferences:{nodeIntegration: true}})
      //Forced setting to fit window to campfire screens
-      mainWindow.setContentSize(6400,800);
+     mainWindow.setContentSize(6400,800);
       
       
       mainWindow.loadURL(wallURL);
@@ -102,10 +104,10 @@ var mouseController =
       // Create a browser window for the "Floor"...
       // Floor on Campfire must be centered (x position)
       // "Floor" for debug should fill available screen
-      floorScreen.bounds.width=1920;
-      floorScreen.bounds.height=1080;
+     floorScreen.bounds.width=1920;
+     floorScreen.bounds.height=1080;
 
-      floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
+    floorWindow = new BrowserWindow({x:floorScreen.bounds.x, y:floorScreen.bounds.y,
                                        width:floorScreen.bounds.width, height:floorScreen.bounds.height,
                                        show: displayEnabled,
                                        frame:false,
@@ -123,15 +125,14 @@ var mouseController =
       mainWindow.setFullScreen(fullScreen);
 
       // Emitted when the window is closed.
-      mainWindow.on('closed', function () 
-      {
+      mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null
         floorWindow = null
       })
-    },
+  },
     rotateMouse: function()
     {
       this.floorSize = this.floorScreen.size;
@@ -173,37 +174,37 @@ var mouseController =
             return t
           },
           //determines if the mouse cursor is within the boundaries of the floor, else we are on the wall.
-          onFloor: function(x,y, fb)
+          onFloor: function(x, y, fb)
           {
             return ((x <= fb.x + fb.width && x >= fb.x) &&
                (y <= fb.y + fb.height && y >= fb.y));
           },
-          screenWrap: function(xPos, yPos, wb)
+          screenWrap: function(x, y, wb)
           {
               //moving right to left
-              if (yPos >= wb.height-2) return;
-              if (xPos >= (wb.x + wb.width)-2)
+              if (y >= wb.height-2) return;
+              if (x >= (wb.x + wb.width)-2)
               {
                 console.log("Transitioning right to left")
-                robot.moveMouse(wb.x+4, yPos);
+                robot.moveMouse(wb.x+4, y);
               }
               //left to right
-              else if (xPos < wb.x + 4)
+              else if (x < wb.x + 4)
               {
                 console.log("Transitioning left to right");
-                robot.moveMouse(wb.x+wb.width-4, yPos);
+                robot.moveMouse(wb.x+wb.width-4, y);
               }
               return;
           }
         }
-        var wallListener = function(xPos, yPos, fCx, fCy, fRadius, userOffset, borderOffset)
+        var wallListener = function(x, y, fCx, fCy, fRadius, wallOffset, borderOffset)
         {
             //Get position of mouse and convert to percentage of x position to width on wall screen.
-            var perc = (xPos - wb.x) / wb.width,
+            var perc = (x - wb.x) / wb.width,
             twoPI = Math.PI * 2,
             //convert to radians, degrees dont return correct values using Math.sin, cos
             //Theta's range = [0, 2pi]
-            wallOffset = twoPI * userOffset,
+            wallOffset = twoPI * wallOffset,
             //2pi * pi/2 = pi
             theta = (perc * twoPI) + wallOffset;
             //Clamp theta to [0, 2pi]
@@ -214,20 +215,25 @@ var mouseController =
             //case for reaching vertical border, the mouse appears on the opposite border.
             if (params["screenwrap"])
             {
-                util.screenWrap(xPos, yPos, wb);
+                util.screenWrap(x, y, wb);
             }
-            if (xPos > wb.x && yPos > (wb.height)-4)
+            if (x > wb.x && y > (wb.height)-4)
             {
               var newRadius = fRadius - borderOffset;
               var x = fCx + (newRadius * Math.cos(theta));
               var y = fCy + (newRadius * Math.sin(theta));
+              if (params["centermode"])
+              {
+                x = fCx, 
+                y = fCy;
+              }
               robot.moveMouse(x, y);
             }
         }
-        var floorListener = function(xPos, yPos, fCx, fCy, fRadius, userOffset, borderOffset)
+        var floorListener = function(x, y, fCx, fCy, fRadius, floorOffset, borderOffset)
         {
-            var dx = xPos - fCx,
-                dy = yPos - fCy,
+            var dx = x - fCx,
+                dy = y - fCy,
                 theta = util.calcTheta(dx, dy),
                 currentR = Math.sqrt(dx**2 + dy**2);
 
@@ -240,7 +246,7 @@ var mouseController =
                 mouse will transition from the floor to wall and always appear at the bottom of the wall screen.
               */
               var frac = theta/360,
-              floorOffset = (wb.x + wb.width) * (userOffset);
+              floorOffset = (wb.x + wb.width) * (floorOffset);
 
               // the fraction of width from the origin: (wb.x + (wb.width * frac))
               //wallOffset is typically 4800 = (3/4) * 6400 if the origin is at 0 degrees
@@ -294,6 +300,8 @@ var mouseController =
         }
         );
     }
+
+
 }
   app.on('ready', function()
   {
