@@ -1,8 +1,9 @@
 #campfire-hci
 Code related to HCI extensions for the IDEA Campfire
+
 #How to run
 1. cd ./../path/to/campfire-hci
-2. cd exampleproject
+2. cd wrangler
 3. npm install
 4. electron .
 If there are compatibility errors with electron, run this command in the directory of package.json.
