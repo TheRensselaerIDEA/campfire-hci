@@ -12,11 +12,11 @@ npm rebuild --runtime=electron --target=1.8.2 --disturl=https://atom.io/download
 ```
 
 # How to include mouse utils
-1. ```npm install @fangt/campfiremouseutil```
+1. ```npm install @campfirehci/campfiremouseutil```
 2. include in app.js
 ```javascript
 var screen = electron.screen;
-var mouseutil = require('@fangt/campfiremouseutil')(screen);
+var mouseutil = require('campfirehci/campfiremouseutill')({ "arguments": values });
 ```
 
 # Additional dependencies:
