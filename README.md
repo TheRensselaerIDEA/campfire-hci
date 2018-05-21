@@ -12,14 +12,21 @@ npm rebuild --runtime=electron --target=1.8.2 --disturl=https://atom.io/download
 ```
 
 # How to include mouse utils
-1. ```npm install @campfirehci/campfiremouseutil```
+1. ```npm install @campfirehci/mouseutil```
 2. include in app.js
 ```javascript
-var mouseutil = require('campfirehci/campfiremouseutill')({ "arguments": values });
+var mouseutil = require('campfirehci/mouseutill')({ "arguments": values });
 ```
 
 # Additional dependencies:
-1. MSBuildTools
+1. Node.js
+	- https://nodejs.org/en/
+2. Electron.js
+	- https://electronjs.org/
+
+FOR FRESH INSTALLS ONLY
+-------------------
+2. MSBuildTools
 	- http://landinghub.visualstudio.com/visual-cpp-build-tools
 2. Python 2.7
 	- set PYTHON path variable to C:/../path/to/Python27.exe
@@ -28,3 +35,4 @@ var mouseutil = require('campfirehci/campfiremouseutill')({ "arguments": values 
 	- npm install --global node-gyp
 	- see building robotjs
 		- https://www.npmjs.com/package/robotjs
+--------------------
